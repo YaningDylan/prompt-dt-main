@@ -1,0 +1,200 @@
+wandb_version: 1
+
+env:
+  desc: null
+  value: cheetah_vel
+dataset_mode:
+  desc: null
+  value: expert
+test_dataset_mode:
+  desc: null
+  value: expert
+train_prompt_mode:
+  desc: null
+  value: expert
+test_prompt_mode:
+  desc: null
+  value: expert
+prompt_episode:
+  desc: null
+  value: 1
+prompt_length:
+  desc: null
+  value: 5
+stochastic_prompt:
+  desc: null
+  value: true
+no_prompt:
+  desc: null
+  value: false
+no_r:
+  desc: null
+  value: false
+no_rtg:
+  desc: null
+  value: false
+finetune:
+  desc: null
+  value: false
+finetune_steps:
+  desc: null
+  value: 10
+finetune_batch_size:
+  desc: null
+  value: 256
+finetune_opt:
+  desc: null
+  value: true
+finetune_lr:
+  desc: null
+  value: 0.0001
+no_state_normalize:
+  desc: null
+  value: false
+average_state_mean:
+  desc: null
+  value: true
+evaluation:
+  desc: null
+  value: false
+render:
+  desc: null
+  value: false
+load_path:
+  desc: null
+  value: null
+mode:
+  desc: null
+  value: normal
+K:
+  desc: null
+  value: 20
+pct_traj:
+  desc: null
+  value: 1.0
+batch_size:
+  desc: null
+  value: 16
+embed_dim:
+  desc: null
+  value: 128
+n_layer:
+  desc: null
+  value: 3
+n_head:
+  desc: null
+  value: 1
+activation_function:
+  desc: null
+  value: relu
+dropout:
+  desc: null
+  value: 0.1
+learning_rate:
+  desc: null
+  value: 0.0001
+weight_decay:
+  desc: null
+  value: 0.0001
+warmup_steps:
+  desc: null
+  value: 10000
+num_eval_episodes:
+  desc: null
+  value: 50
+max_iters:
+  desc: null
+  value: 5000
+num_steps_per_iter:
+  desc: null
+  value: 10
+device:
+  desc: null
+  value: cuda
+log_to_wandb:
+  desc: null
+  value: true
+train_eval_interval:
+  desc: null
+  value: 500
+test_eval_interval:
+  desc: null
+  value: 100
+save_interval:
+  desc: null
+  value: 500
+total_state_mean:
+  desc: null
+  value:
+  - -0.12300734221935272
+  - 0.30973273515701294
+  - 0.007601992227137089
+  - -0.04550643637776375
+  - 0.009419248439371586
+  - 0.4079858064651489
+  - 0.10656087845563889
+  - 0.0783473551273346
+  - 1.4874637126922607
+  - -0.016383575275540352
+  - 0.0494992770254612
+  - -0.005314814858138561
+  - -0.02723083831369877
+  - 0.022059721872210503
+  - -0.006708827801048756
+  - 0.13153892755508423
+  - 0.04032612964510918
+  - 7.12382173538208
+  - 0.0
+  - 0.5471640229225159
+total_state_std:
+  desc: null
+  value:
+  - 0.056090325117111206
+  - 0.38774374127388
+  - 0.1862441599369049
+  - 0.1851000040769577
+  - 0.22049686312675476
+  - 0.22937323153018951
+  - 0.2753853499889374
+  - 0.20576460659503937
+  - 0.8727684617042542
+  - 0.5037802457809448
+  - 1.0569614171981812
+  - 2.730943441390991
+  - 3.366558313369751
+  - 5.950282096862793
+  - 4.1040778160095215
+  - 7.405230522155762
+  - 3.7247307300567627
+  - 6.340000152587891
+  - 9.999999974752427e-07
+  - 0.06392771005630493
+_wandb:
+  desc: null
+  value:
+    python_version: 3.8.10
+    cli_version: 0.17.5
+    framework: huggingface
+    huggingface_version: 4.5.1
+    is_jupyter_run: false
+    is_kaggle_kernel: false
+    start_time: 1721696881
+    t:
+      1:
+      - 1
+      - 11
+      - 55
+      2:
+      - 1
+      - 11
+      - 55
+      3:
+      - 13
+      - 16
+      - 23
+      4: 3.8.10
+      5: 0.17.5
+      6: 4.5.1
+      8:
+      - 5
+      13: linux-x86_64
