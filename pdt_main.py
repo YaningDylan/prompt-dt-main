@@ -42,8 +42,19 @@ def experiment_mix_env(
         'cheetah_vel': "cheetah_vel/cheetah_vel_40.json",
         'cheetah_dir': "cheetah_dir/cheetah_dir_2.json",
         'ant_dir': "ant_dir/ant_dir_50.json",
+        'ant_dir_new': "ant_dir_new/ant_dir_new_50.json",
+        'ant_dir_random': "ant_dir_random/ant_dir_random_50.json",
+        'ant_dir_partRandom': "ant_dir_partRandom/ant_dir_partRandom_50.json",
         'ML1-pick-place-v2': "ML1-pick-place-v2/ML1_pick_place.json",
-        'merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json'
+        'merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
+        '1-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
+        '2-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
+        '3-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
+        '4-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
+        'cheetah_vel_new': "cheetah_vel_new/cheetah_vel_new_40.json",
+        'cheetah_vel_base': "cheetah_vel_base/cheetah_vel_base_40.json",
+        'cheetah_vel_random': "cheetah_vel_random/cheetah_vel_random_40.json",
+        'cheetah_vel_partRandom': "cheetah_vel_partRandom/cheetah_vel_partRandom_40.json",
     }
     
     task_config = os.path.join(config_save_path, config_path_dict[args.env])
@@ -101,7 +112,7 @@ def experiment_mix_env(
     exp_prefix = exp_prefix + '-' + args.env
     num_env = len(train_env_name_list)
     group_name = f'{exp_prefix}-{str(num_env)}-Env-{dataset_mode}'
-    exp_prefix = f'{group_name}'
+    exp_prefix = f'{group_name}-{random.randint(int(1e5), int(1e6) - 1)}'
 
     state_dim = test_env_list[0].observation_space.shape[0]
     act_dim = test_env_list[0].action_space.shape[0]
@@ -234,7 +245,7 @@ def experiment_mix_env(
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='merged_cheetah_vel') # ['cheetah_dir', 'cheetah_vel', 'ant_dir', 'ML1-pick-place-v2']
+    parser.add_argument('--env', type=str, default='ant_dir') # ['cheetah_dir', 'cheetah_vel', 'ant_dir', 'ML1-pick-place-v2']
     parser.add_argument('--dataset_mode', type=str, default='expert')
     parser.add_argument('--test_dataset_mode', type=str, default='expert')
     parser.add_argument('--train_prompt_mode', type=str, default='expert')
