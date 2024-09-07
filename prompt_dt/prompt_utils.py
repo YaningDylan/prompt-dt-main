@@ -58,6 +58,35 @@ def gen_env(env_name, config_save_path):
         max_ep_len = 500 
         env_targets= [int(650)]
         scale = 650.
+        
+    elif 'ML10' in env_name: # metaworld ML10
+        task_name = '-'.join(env_name.split('-')[1:])
+        ml10 = metaworld.ML10()
+        train_task = ml10.train_tasks
+        test_task = ml10.test_tasks
+        env = None
+        task = None
+        for name, env_cls in ml10.train_classes.items():
+            env = env_cls()
+            task = random.choice([task for task in train_task
+                                  if task.env_name == task_name])
+            env.set_task(task)
+            break
+        
+        if env is None:
+            for name, env_cls in ml10.test_classes.items():
+                env = env_cls()
+                task = random.choice([task for task in test_task
+                                  if task.env_name == task_name])
+                env.set_task(task)
+                break
+        if env is None:
+            raise ValueError(f"Task {task_name} not found in ML1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+    
+        max_ep_len = 500 
+        env_targets= [int(650)]
+        scale = 650.
+        
     else:
         raise NotImplementedError
     return env, max_ep_len, env_targets, scale
