@@ -29,7 +29,7 @@ def prompt_evaluate_episode(
     state_std = torch.from_numpy(state_std).to(device=device)
 
     state = env.reset()
-
+    
     # we keep all the histories on the device
     # note that the latest action and reward will be "padding"
     states = torch.from_numpy(state).reshape(1, state_dim).to(device=device, dtype=torch.float32)
@@ -105,10 +105,21 @@ def prompt_evaluate_episode_rtg(
     state_mean = torch.from_numpy(state_mean).to(device=device)
     state_std = torch.from_numpy(state_std).to(device=device)
 
-    state = env.reset()
+    reset_return = env.reset()
+    if isinstance(reset_return, tuple):
+        state = reset_return[0]
+    else:
+        state = reset_return
+
+    if type(state) == tuple:
+        state = state[0]
+
     if mode == 'noise':
         state = state + np.random.normal(0, 0.1, size=state.shape)
 
+    if not isinstance(state, np.ndarray):
+        state = np.array(state)
+        
     # we keep all the histories on the device
     # note that the latest action and reward will be "padding"
     states = torch.from_numpy(state).reshape(1, state_dim).to(device=device, dtype=torch.float32)
@@ -127,6 +138,7 @@ def prompt_evaluate_episode_rtg(
         # add padding
         actions = torch.cat([actions, torch.zeros((1, act_dim), device=device)], dim=0)
         rewards = torch.cat([rewards, torch.zeros(1, device=device)])
+        success = 0
         if no_state_normalize:
             action = model.get_action(
                 states.to(dtype=torch.float32),
@@ -149,8 +161,16 @@ def prompt_evaluate_episode_rtg(
         actions[-1] = action
         action = action.detach().cpu().numpy()
 
-        state, reward, done, infos = env.step(action)
+        step_return = env.step(action)
+        if len(step_return) == 5:
+            state, reward, done, truncated, infos = step_return
+        else:
+            state, reward, done, infos = step_return
+            truncate = False
 
+        if not isinstance(state, np.ndarray):
+            state = np.array(state)
+        
         cur_state = torch.from_numpy(state).to(device=device).reshape(1, state_dim)
         states = torch.cat([states, cur_state], dim=0)
         rewards[-1] = reward
@@ -171,10 +191,16 @@ def prompt_evaluate_episode_rtg(
 
         episode_return += reward
         episode_length += 1
-
+        
+        if 'success' not in infos:
+            raise ValueError(f'Success not in infos for env {env}')
+        
+        if 'success' in infos and infos['success'] > 1e-8:
+           success = 1
+        
         if done:
             break
 
         infos['episode_length'] = episode_length
 
-    return episode_return, infos
+    return episode_return, infos, success

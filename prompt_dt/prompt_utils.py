@@ -62,30 +62,34 @@ def gen_env(env_name, config_save_path):
     elif 'ML10' in env_name: # metaworld ML10
         task_name = '-'.join(env_name.split('-')[1:])
         ml10 = metaworld.ML10()
-        train_task = ml10.train_tasks
-        test_task = ml10.test_tasks
         env = None
-        task = None
-        for name, env_cls in ml10.train_classes.items():
-            env = env_cls()
-            task = random.choice([task for task in train_task
-                                  if task.env_name == task_name])
-            env.set_task(task)
-            break
+        matching_tasks = []
+
+
+        if task_name in ml10.train_classes:
+            env = ml10.train_classes[task_name]()
+            matching_tasks = [task for task in ml10.train_tasks if task.env_name == task_name]
+        
+        if task_name in ml10.test_classes:
+            env = ml10.test_classes[task_name]()
+            matching_tasks = [task for task in ml10.test_tasks if task.env_name == task_name]
         
         if env is None:
-            for name, env_cls in ml10.test_classes.items():
-                env = env_cls()
-                task = random.choice([task for task in test_task
-                                  if task.env_name == task_name])
-                env.set_task(task)
-                break
-        if env is None:
-            raise ValueError(f"Task {task_name} not found in ML1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+            for task in ml10.train_tasks:
+                print(task.env_name)
+            raise ValueError(f"No envs found for {task_name}")
+        if len(matching_tasks) < 1:
+            for task in ml10.train_tasks:
+                print(task.env_name)
+            raise ValueError(f"No matching tasks found for {task_name}")
+        
+        task = matching_tasks[0]
+    
+        env.set_task(task)
     
         max_ep_len = 500 
-        env_targets= [int(650)]
-        scale = 650.
+        env_targets= [int(150)]
+        scale = 150.
         
     else:
         raise NotImplementedError
@@ -474,9 +478,11 @@ def eval_episodes(target_rew, info, variant, env, env_name):
 
     def fn(model, prompt=None):
         returns = []
+        success = []
+        length = []
         for _ in range(num_eval_episodes):
             with torch.no_grad():
-                ret, infos = prompt_evaluate_episode_rtg(
+                ret, infos, succ = prompt_evaluate_episode_rtg(
                     env,
                     state_dim,
                     act_dim,
@@ -494,9 +500,12 @@ def eval_episodes(target_rew, info, variant, env, env_name):
                     no_state_normalize=variant['no_state_normalize']                
                     )
             returns.append(ret)
+            success.append(succ)
+            length.append(infos['episode_length'])
         return {
             f'{env_name}_target_{target_rew}_return_mean': np.mean(returns),
-            f'{env_name}_target_{target_rew}_return_std': np.std(returns),
+            f'{env_name}_target_{target_rew}_success_rate': np.mean(success),
+            f'{env_name}_target_{target_rew}_episode_length_mean': np.mean(length),
             }
     return fn
 
