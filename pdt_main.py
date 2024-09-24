@@ -64,9 +64,9 @@ def experiment_mix_env(
         task_config = json.load(f, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
     train_env_name_list, test_env_name_list = [], []
     for task_ind in task_config.train_tasks:
-        train_env_name_list.append(args.env +'-'+ str(task_ind))
+        train_env_name_list.append(args.env +'-'+ str(task_ind) + '-train')
     for task_ind in task_config.test_tasks:
-        test_env_name_list.append(args.env +'-'+ str(task_ind))
+        test_env_name_list.append(args.env +'-'+ str(task_ind) + '-test')
     # training envs
     info, env_list = get_env_list(train_env_name_list, config_save_path, device)
     # testing envs

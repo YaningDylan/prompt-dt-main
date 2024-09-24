@@ -92,8 +92,13 @@ def gen_env(env_name, config_save_path):
         scale = 150.
     
     elif 'MT50' in env_name:
-        task_name = '-'.join(env_name.split('-')[1:])
-        task = metaworld.MT1(task_name).train_tasks[0]
+        task_name = '-'.join(env_name.split('-')[1:-1])
+        if 'train' in env_name:
+            task = metaworld.MT1(task_name).train_tasks[0]
+        elif 'test' in env_name:
+            task = metaworld.MT1(task_name).test_tasks[1]
+        else:
+            raise ValueError(f"Invalid env name: {env_name}")
         env = metaworld.MT1(task_name).train_classes[task_name]()
         env.set_task(task)
         seed = 1
