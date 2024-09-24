@@ -67,12 +67,12 @@ def gen_env(env_name, config_save_path):
 
 
         if task_name in ml10.train_classes:
-            env = ml10.train_classes[task_name]()
-            matching_tasks = [task for task in ml10.train_tasks if task.env_name == task_name]
+            env = ml1.train_classes[task_name]()
+            matching_tasks = [task for task in ml1.train_tasks if task.env_name == task_name]
         
         if task_name in ml10.test_classes:
-            env = ml10.test_classes[task_name]()
-            matching_tasks = [task for task in ml10.test_tasks if task.env_name == task_name]
+            env = ml1.test_classes[task_name]()
+            matching_tasks = [task for task in ml1.test_tasks if task.env_name == task_name]
         
         if env is None:
             for task in ml10.train_tasks:
@@ -83,13 +83,25 @@ def gen_env(env_name, config_save_path):
                 print(task.env_name)
             raise ValueError(f"No matching tasks found for {task_name}")
         
-        task = matching_tasks[0]
+        task = matching_tasks[random.randint(0, len(matching_tasks) - 1)]
     
         env.set_task(task)
     
         max_ep_len = 500 
         env_targets= [int(150)]
         scale = 150.
+    
+    elif 'MT50' in env_name:
+        task_name = '-'.join(env_name.split('-')[1:])
+        task = metaworld.MT1(task_name).train_tasks[0]
+        env = metaworld.MT1(task_name).train_classes[task_name]()
+        env.set_task(task)
+        seed = 1
+        env.seed(seed)
+        max_ep_len = 500
+        env_targets = [4500]
+        scale = 1000.
+        dversion = 0 #compatible
         
     else:
         raise NotImplementedError
