@@ -41,22 +41,23 @@ def experiment_mix_env(
     config_path_dict = {
         'cheetah_vel': "cheetah_vel/cheetah_vel_40.json",
         'cheetah_dir': "cheetah_dir/cheetah_dir_2.json",
-        'ant_dir': "ant_dir/ant_dir_50.json",
+        'ant_dir': "ant_dir/ant_dir_10.json",
+        'ant_dir_med': "ant_dir/ant_dir_10.json",
+        'ant_dir_low': "ant_dir/ant_dir_10.json",
+        'ant_dir_high': "ant_dir/ant_dir_10.json",
         'ant_dir_new': "ant_dir_new/ant_dir_new_50.json",
         'ant_dir_random': "ant_dir_random/ant_dir_random_50.json",
         'ant_dir_partRandom': "ant_dir_partRandom/ant_dir_partRandom_50.json",
         'ML1-pick-place-v2': "ML1-pick-place-v2/ML1_pick_place.json",
         'merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
-        '1-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
-        '2-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
-        '3-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
-        '4-merged_cheetah_vel': 'merged_cheetah_vel/merged_cheetah_vel_20.json',
         'cheetah_vel_new': "cheetah_vel_new/cheetah_vel_new_40.json",
         'cheetah_vel_base': "cheetah_vel_base/cheetah_vel_base_40.json",
         'cheetah_vel_random': "cheetah_vel_random/cheetah_vel_random_40.json",
         'cheetah_vel_partRandom': "cheetah_vel_partRandom/cheetah_vel_partRandom_40.json",
         'ML10': "ML10/ML10_15.json",
+        'ML10-sparse15': "ML10/ML10_15.json",
         'MT50': "MT50/MT50.json",
+        'MT10': "MT10/MT10.json"
     }
     
     task_config = os.path.join(config_save_path, config_path_dict[args.env])
@@ -64,14 +65,15 @@ def experiment_mix_env(
         task_config = json.load(f, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
     train_env_name_list, test_env_name_list = [], []
     for task_ind in task_config.train_tasks:
-        train_env_name_list.append(args.env +'-'+ str(task_ind) + '-train')
+        train_env_name_list.append( args.env +'-'+ str(task_ind))
     for task_ind in task_config.test_tasks:
-        test_env_name_list.append(args.env +'-'+ str(task_ind) + '-test')
+        test_env_name_list.append(args.env +'-'+ str(task_ind))
     # training envs
     info, env_list = get_env_list(train_env_name_list, config_save_path, device)
     # testing envs
-    test_info, test_env_list = get_env_list(test_env_name_list, config_save_path, device)
+    test_info, test_env_list = get_env_list(test_env_name_list, config_save_path, device, mode='test')
 
+        
     print(f'Env Info: {info} \n\n Test Env Info: {test_info}\n\n\n')
     print(f'Env List: {env_list} \n\n Test Env List: {test_env_list}')
     ######
@@ -182,6 +184,14 @@ def experiment_mix_env(
             model_post_fix += '_FINETUNE'
         if variant['no_r']:
             model_post_fix += '_NO_R'
+        if variant['mtbc']:
+            model_post_fix += 'MTBC'
+            variant['no_prompt'] = True
+            args.no_prompt = True
+            variant['no_r'] = True
+            args.no_r = True
+            variant['no_rtg'] = True
+            args.no_rtg = True
         
         for iter in range(variant['max_iters']):
             env_id = iter % num_env
@@ -210,12 +220,15 @@ def experiment_mix_env(
                     outputs.update(test_eval_logs)
             
             if iter % args.train_eval_interval == 0:
+                pass
+            '''
                 # evaluate train
                 train_eval_logs = trainer.eval_iteration_multienv(
                     get_prompt, prompt_trajectories_list,
                     eval_episodes, train_env_name_list, info, variant, env_list, iter_num=iter + 1, 
                     print_logs=True, no_prompt=args.no_prompt, group='train')
                 outputs.update(train_eval_logs)
+            '''
 
             if iter % variant['save_interval'] == 0:
                 trainer.save_model(
@@ -247,7 +260,7 @@ def experiment_mix_env(
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='MT50') # ['cheetah_dir', 'cheetah_vel', 'ant_dir', 'ML1-pick-place-v2']
+    parser.add_argument('--env', type=str, default='MT10') # ['cheetah_dir', 'cheetah_vel', 'ant_dir', 'ML1-pick-place-v2']
     parser.add_argument('--dataset_mode', type=str, default='expert')
     parser.add_argument('--test_dataset_mode', type=str, default='expert')
     parser.add_argument('--train_prompt_mode', type=str, default='expert')
@@ -259,6 +272,7 @@ if __name__ == '__main__':
     parser.add_argument('--no-prompt', action='store_true', default=False)
     parser.add_argument('--no-r', action='store_true', default=False)
     parser.add_argument('--no-rtg', action='store_true', default=False)
+    parser.add_argument('--mtbc', action='store_true', default=False)
     parser.add_argument('--finetune', action='store_true', default=False)
     parser.add_argument('--finetune_steps', type=int, default=10)
     parser.add_argument('--finetune_batch_size', type=int, default=256)

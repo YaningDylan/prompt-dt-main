@@ -193,7 +193,7 @@ def prompt_evaluate_episode_rtg(
         episode_length += 1
         
         if 'success' not in infos:
-            raise ValueError(f'Success not in infos for env {env}')
+            return episode_return, infos
         
         if 'success' in infos and infos['success'] > 1e-8:
            success = 1

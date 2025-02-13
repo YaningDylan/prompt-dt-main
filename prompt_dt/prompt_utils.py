@@ -15,7 +15,7 @@ from metaworld.envs import (ALL_V2_ENVIRONMENTS_GOAL_OBSERVABLE,
 
 """ constructing envs """
 
-def gen_env(env_name, config_save_path):
+def gen_env(env_name, config_save_path, mode='train'):
     if 'cheetah_dir' in env_name:
         if '0' in env_name:
             env = HalfCheetahDirEnv([{'direction': 1}], include_goal = False)
@@ -60,19 +60,22 @@ def gen_env(env_name, config_save_path):
         scale = 650.
         
     elif 'ML10' in env_name: # metaworld ML10
-        task_name = '-'.join(env_name.split('-')[1:])
+        if 'sparse' in env_name:
+            task_name = '-'.join(env_name.split('-')[2:])
+        else:
+            task_name = '-'.join(env_name.split('-')[1:])
         ml10 = metaworld.ML10()
         env = None
         matching_tasks = []
 
 
         if task_name in ml10.train_classes:
-            env = ml1.train_classes[task_name]()
-            matching_tasks = [task for task in ml1.train_tasks if task.env_name == task_name]
+            env = ml10.train_classes[task_name]()
+            matching_tasks = [task for task in ml10.train_tasks if task.env_name == task_name]
         
         if task_name in ml10.test_classes:
-            env = ml1.test_classes[task_name]()
-            matching_tasks = [task for task in ml1.test_tasks if task.env_name == task_name]
+            env = ml10.test_classes[task_name]()
+            matching_tasks = [task for task in ml10.test_tasks if task.env_name == task_name]
         
         if env is None:
             for task in ml10.train_tasks:
@@ -91,21 +94,60 @@ def gen_env(env_name, config_save_path):
         env_targets= [int(150)]
         scale = 150.
     
-    elif 'MT50' in env_name:
-        task_name = '-'.join(env_name.split('-')[1:-1])
-        if 'train' in env_name:
-            task = metaworld.MT1(task_name).train_tasks[0]
-        elif 'test' in env_name:
-            task = metaworld.MT1(task_name).test_tasks[1]
+    elif 'MT10' in env_name:
+        random_seed = random.randint(0, 10000)
+        task_name = '-'.join(env_name.split('-')[1:])
+        MT10 = metaworld.MT1(task_name, seed=random_seed)
+        task_number = len(MT10.train_tasks)
+        train_idx = random.randint(0, task_number - 1)
+        available_indices = list(range(task_number))
+        available_indices.remove(train_idx)  
+        test_idx = random.choice(available_indices)
+        print('loading')
+        if mode == 'train':
+            print('train')
+            env = MT10.train_classes[task_name]()
+            task = MT10.train_tasks[train_idx]
+        elif mode == 'test':
+            print('test')
+            env = MT10.train_classes[task_name]()
+            task = MT10.train_tasks[test_idx]            
         else:
             raise ValueError(f"Invalid env name: {env_name}")
-        env = metaworld.MT1(task_name).train_classes[task_name]()
+        
         env.set_task(task)
-        seed = 1
-        env.seed(seed)
-        max_ep_len = 500
-        env_targets = [4500]
-        scale = 1000.
+        max_ep_len = 200
+        env_targets= [int(150)]
+        scale = 150.
+        matching_tasks = []   
+        dversion = 0 #compatible
+    
+    elif 'MT50' in env_name:
+        random_seed = random.randint(0, 10000)
+        task_name = '-'.join(env_name.split('-')[1:])
+        MT50 = metaworld.MT1(task_name, seed=random_seed)
+        task_number = len(MT50.train_tasks)
+        train_idx = random.randint(0, task_number - 1)
+        available_indices = list(range(task_number))
+        available_indices.remove(train_idx)  
+        test_idx = random.choice(available_indices)
+        print('loading')
+        if mode == 'train':
+            print('train')
+            env = MT50.train_classes[task_name]()
+            task = MT50.train_tasks[train_idx]
+        elif mode == 'test':
+            print('test')
+            env = MT50.train_classes[task_name]()
+            task = MT50.train_tasks[test_idx]            
+        else:
+            raise ValueError(f"Invalid env name: {env_name}")
+        
+        env.set_task(task)
+        max_ep_len = 200
+        env_targets= [int(150)]
+        scale = 150.
+        matching_tasks = []   
         dversion = 0 #compatible
         
     else:
@@ -113,13 +155,13 @@ def gen_env(env_name, config_save_path):
     return env, max_ep_len, env_targets, scale
 
 
-def get_env_list(env_name_list, config_save_path, device):
+def get_env_list(env_name_list, config_save_path, device, mode='train'):
     info = {} # store all the attributes for each env
     env_list = []
     
     for env_name in env_name_list:
         info[env_name] = {}
-        env, max_ep_len, env_targets, scale = gen_env(env_name=env_name, config_save_path=config_save_path)
+        env, max_ep_len, env_targets, scale = gen_env(env_name=env_name, config_save_path=config_save_path, mode=mode)
         info[env_name]['max_ep_len'] = max_ep_len
         info[env_name]['env_targets'] = env_targets
         info[env_name]['scale'] = scale
@@ -497,32 +539,55 @@ def eval_episodes(target_rew, info, variant, env, env_name):
         returns = []
         success = []
         length = []
-        for _ in range(num_eval_episodes):
-            with torch.no_grad():
-                ret, infos, succ = prompt_evaluate_episode_rtg(
-                    env,
-                    state_dim,
-                    act_dim,
-                    model,
-                    max_ep_len=max_ep_len,
-                    scale=scale,
-                    target_return=target_rew / scale,
-                    mode=mode,
-                    state_mean=state_mean,
-                    state_std=state_std,
-                    device=device,
-                    prompt=prompt,
-                    no_r=variant['no_r'],
-                    no_rtg=variant['no_rtg'],
-                    no_state_normalize=variant['no_state_normalize']                
-                    )
-            returns.append(ret)
-            success.append(succ)
-            length.append(infos['episode_length'])
-        return {
-            f'{env_name}_target_{target_rew}_return_mean': np.mean(returns),
-            f'{env_name}_target_{target_rew}_success_rate': np.mean(success),
-            f'{env_name}_target_{target_rew}_episode_length_mean': np.mean(length),
-            }
+        if 'ML' in env_name or 'MT' in env_name:
+            for _ in range(num_eval_episodes):
+                with torch.no_grad():
+                    ret, infos, succ = prompt_evaluate_episode_rtg(
+                        env,
+                        state_dim,
+                        act_dim,
+                        model,
+                        max_ep_len=max_ep_len,
+                        scale=scale,
+                        target_return=target_rew / scale,
+                        mode=mode,
+                        state_mean=state_mean,
+                        state_std=state_std,
+                        device=device,
+                        prompt=prompt,
+                        no_r=variant['no_r'],
+                        no_rtg=variant['no_rtg'],
+                        no_state_normalize=variant['no_state_normalize']                
+                        )
+                returns.append(ret)
+                success.append(succ)
+            return {
+                f'{env_name}_target_{target_rew}_return_mean': np.mean(returns),
+                f'{env_name}_target_{target_rew}_success_rate': np.mean(success),
+                }
+        else:
+            for _ in range(num_eval_episodes):
+                with torch.no_grad():
+                    ret, infos = prompt_evaluate_episode_rtg(
+                        env,
+                        state_dim,
+                        act_dim,
+                        model,
+                        max_ep_len=max_ep_len,
+                        scale=scale,
+                        target_return=target_rew / scale,
+                        mode=mode,
+                        state_mean=state_mean,
+                        state_std=state_std,
+                        device=device,
+                        prompt=prompt,
+                        no_r=variant['no_r'],
+                        no_rtg=variant['no_rtg'],
+                        no_state_normalize=variant['no_state_normalize']                
+                        )
+                returns.append(ret)
+            return {
+                f'{env_name}_target_{target_rew}_return_mean': np.mean(returns),
+                }
     return fn
 
