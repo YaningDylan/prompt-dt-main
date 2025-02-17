@@ -273,6 +273,7 @@ if __name__ == '__main__':
     parser.add_argument('--no-r', action='store_true', default=False)
     parser.add_argument('--no-rtg', action='store_true', default=False)
     parser.add_argument('--mtbc', action='store_true', default=False)
+    parser.add_argument('--sparse', action='store_true', default=False)
     parser.add_argument('--finetune', action='store_true', default=False)
     parser.add_argument('--finetune_steps', type=int, default=10)
     parser.add_argument('--finetune_batch_size', type=int, default=256)
